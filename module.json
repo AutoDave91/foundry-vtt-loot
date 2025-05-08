@@ -1,0 +1,15 @@
+{
+    "name": "pf2e-loot-generator",
+    "title": "PF2E Loot Generator",
+    "description": "Generates random Pathfinder 2e loot for rooms in a scene.",
+    "version": "1.0.0",
+    "author": "AutoDave",
+    "minimumCoreVersion": "11",
+    "compatibleCoreVersion": "11",
+    "system": "pf2e",
+    "scripts": [
+        "scripts/loot-generator.js"
+    ],
+    "manifest": "https://your-domain.com/pf2e-loot-generator/module.json",
+    "download": "https://your-domain.com/pf2e-loot-generator/pf2e-loot-generator.zip"
+}
