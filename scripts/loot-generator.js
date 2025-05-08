@@ -1,75 +1,34 @@
-Hooks.once("ready", () => {
-    console.log("PF2E Loot Generator | Ready");
-
-    Hooks.on("getSceneControlButtons", (controls) => {
-        const tokenControls = controls.find(c => c.name === "token");
-        if (tokenControls) {
-            tokenControls.tools.push({
-                name: "generateLoot",
-                title: "Generate PF2E Loot",
-                icon: "fas fa-coins",
-                button: true,
-                onClick: () => generateLootDialog()
-            });
-        }
-    });
-});
-
-function generateLootDialog() {
-    new Dialog({
-        title: "Generate Pathfinder 2e Loot",
-        content: `
-        <form>
-          <div class="form-group">
-            <label>Max Total Value (gp):</label>
-            <input type="number" name="value" value="50" min="1"/>
-          </div>
-          <div class="form-group">
-            <label>Max Items:</label>
-            <input type="number" name="count" value="5" min="1" max="20"/>
-          </div>
-          <div class="form-group">
-            <label>Allowed Rarities:</label>
-            <select name="rarity" multiple>
-              <option value="common" selected>Common</option>
-              <option value="uncommon">Uncommon</option>
-              <option value="rare">Rare</option>
-              <option value="unique">Unique</option>
-            </select>
-          </div>
-        </form>
-      `,
-        buttons: {
-            generate: {
-                icon: "<i class='fas fa-dice'></i>",
-                label: "Generate",
-                callback: async (html) => {
-                    const value = parseFloat(html.find('[name="value"]').val());
-                    const count = parseInt(html.find('[name="count"]').val());
-                    const rarities = html.find('[name="rarity"]').val();
-                    generateLoot(value, count, rarities);
-                }
-            },
-            cancel: {
-                label: "Cancel"
-            }
-        },
-        default: "generate"
-    }).render(true);
-}
-
 async function generateLoot(maxValueGP, maxItems, allowedRarities) {
-    const equipmentComp = game.packs.get("pf2e.equipment-srd");
-    const consumableComp = game.packs.get("pf2e.consumables-srd");
+    // Find all loaded PF2E item compendiums
+    const itemCompendiums = game.packs.filter(p =>
+        p.metadata.system === "pf2e" &&
+        p.documentName === "Item"
+    );
 
-    await Promise.all([equipmentComp.getIndex(), consumableComp.getIndex()]);
+    if (!itemCompendiums.length) {
+        ui.notifications.error("No PF2E item compendiums found.");
+        return;
+    }
 
-    const filterByRarity = entry => allowedRarities.includes(entry.system?.traits?.rarity ?? "common");
+    // Load all items from the matching compendiums
+    let allItems = [];
+    for (const pack of itemCompendiums) {
+        try {
+            await pack.getIndex();
+            const filtered = pack.index.filter(e =>
+                ["equipment", "consumable", "treasure"].includes(e.type) &&
+                allowedRarities.includes(e.system?.traits?.rarity ?? "common")
+            ).map(e => ({ ...e, pack: pack.collection }));
+            allItems = allItems.concat(filtered);
+        } catch (err) {
+            console.warn(`Could not load compendium ${pack.collection}:`, err);
+        }
+    }
 
-    const allItems = [
-        ...equipmentComp.index.filter(e => e.type === "equipment" && filterByRarity(e)),
-        ...consumableComp.index.filter(e => e.type === "consumable" && filterByRarity(e))
-    ];
+    if (allItems.length === 0) {
+        ui.notifications.warn("No matching loot items found with selected rarity filters.");
+        return;
+    }
 
     const shuffled = allItems.sort(() => 0.5 - Math.random());
     const selected = [];
@@ -77,17 +36,17 @@ async function generateLoot(maxValueGP, maxItems, allowedRarities) {
 
     for (const entry of shuffled) {
         if (selected.length >= maxItems) break;
-        const full = await (entry.pack ? game.packs.get(entry.pack).getDocument(entry._id) : null);
-        const priceStr = full?.system?.price?.value?.gp ?? "0";
+        const doc = await game.packs.get(entry.pack)?.getDocument(entry._id);
+        const priceStr = doc?.system?.price?.value?.gp ?? "0";
         const itemValue = parseFloat(priceStr) || 0;
+
         if ((totalValue + itemValue) <= maxValueGP) {
-            selected.push(full.toObject());
+            selected.push(doc.toObject());
             totalValue += itemValue;
         }
     }
 
-    // Add some gold
-    const gold = Math.round((maxValueGP - totalValue) * 10); // Convert gp to sp
+    const gold = Math.round((maxValueGP - totalValue) * 10); // leftover value in sp
     if (gold > 0) {
         selected.push({
             type: "treasure",
@@ -103,7 +62,7 @@ async function generateLoot(maxValueGP, maxItems, allowedRarities) {
     }
 
     const lootActor = await Actor.create({
-        name: `Loot Chest`,
+        name: "Loot Chest",
         type: "loot",
         items: selected,
         token: {
