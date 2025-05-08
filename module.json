@@ -2,7 +2,7 @@
     "name": "pf2e-loot-generator",
     "title": "PF2E Loot Generator",
     "description": "Generates random Pathfinder 2e loot for rooms in a scene.",
-    "version": "1.0.1",
+    "version": "1.0.2",
     "author": "AutoDave",
     "minimumCoreVersion": "11",
     "compatibleCoreVersion": "11",
