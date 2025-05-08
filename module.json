@@ -10,6 +10,6 @@
     "scripts": [
         "scripts/loot-generator.js"
     ],
-    "manifest": "https://your-domain.com/pf2e-loot-generator/module.json",
-    "download": "https://your-domain.com/pf2e-loot-generator/pf2e-loot-generator.zip"
+    "manifest": "https://raw.githubusercontent.com/AutoDave91/foundry-vtt-loot/main/module.json",
+    "download": "https://github.com/AutoDave91/foundry-vtt-loot/archive/refs/heads/main.zip"
 }
