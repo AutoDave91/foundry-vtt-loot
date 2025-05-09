@@ -1,15 +1,22 @@
 {
     "name": "pf2e-loot-generator",
     "title": "PF2E Loot Generator",
-    "description": "Generates random Pathfinder 2e loot for rooms in a scene.",
-    "version": "1.0.2",
+    "description": "Generates loot based on party level and size using Pathfinder 2e standards.",
+    "version": "1.0.3",
     "author": "AutoDave",
     "minimumCoreVersion": "11",
     "compatibleCoreVersion": "11",
-    "system": "pf2e",
-    "scripts": [
-        "scripts/loot-generator.js"
+    "system": [
+        "pf2e"
     ],
+    "scripts": [
+        "loot-generator.js"
+    ],
+    "esmodules": [],
+    "styles": [],
+    "packs": [],
+    "url": "https://github.com/AutoDave91/foundry-vtt-loot",
     "manifest": "https://raw.githubusercontent.com/AutoDave91/foundry-vtt-loot/main/module.json",
-    "download": "https://github.com/AutoDave91/foundry-vtt-loot/archive/refs/heads/main.zip"
+    "download": "https://github.com/AutoDave91/foundry-vtt-loot/archive/refs/heads/main.zip",
+    "license": "MIT"
 }
